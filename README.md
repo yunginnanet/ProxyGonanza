@@ -1,9 +1,12 @@
-# proxygonanza
+# ProxyGonanza
+[![GoDoc](https://godoc.org/git.tcp.direct/kayos/proxygonanza?status.svg)](https://godoc.org/git.tcp.direct/kayos/proxygonanza)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yunginnanet/proxygonanza)](https://goreportcard.com/report/github.com/yunginnanet/proxygonanza)
+
 --
-    import "."
+`import "git.tcp.direct/kayos/proxygonanza"`
 
 
-## Usage
+## Documentation
 
 ```go
 const (
