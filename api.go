@@ -1,6 +1,32 @@
 package proxygonanza
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
+
+const (
+	APIBaseURL = "https://proxybonanza.com/api/v1/"
+	packages   = "userpackages.json"
+	authips    = "authips.json"
+)
+
+// Package contains what we know about a particular proxybonanza package.
+type Package struct {
+	ID           int
+	AuthIPs      []AuthIP
+	AllTimeStats PackageStatistics
+	HourlyStats  map[time.Time]PackageStatistics
+}
+
+// APIClient is a client for ProxyBonanza.com.
+type APIClient struct {
+	Key           string
+	KnownPackages map[int]PackageDetails
+
+	c *http.Client
+}
+
 
 // PackageResponse represents an API response from proxybonanza.com containing proxy package information.
 type PackageResponse struct {

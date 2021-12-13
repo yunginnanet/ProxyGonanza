@@ -6,35 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
-	"time"
 )
 
-const (
-	APIBaseURL = "https://proxybonanza.com/api/v1/"
-	packages   = "userpackages.json"
-	authips    = "authips.json"
-)
-
-// Package contains what we know about a particular proxybonanza package.
-type Package struct {
-	ID           int
-	AuthIPs      []AuthIP
-	AllTimeStats PackageStatistics
-	HourlyStats  map[time.Time]PackageStatistics
-}
-
-// APIClient is a client for ProxyBonanza.com.
-type APIClient struct {
-	Key           string
-	KnownPackages map[int]PackageDetails
-
-	c *http.Client
-}
-
-// NewApiClient instantiates a proxybonanza.com API client with the given key.
+// NewApiClient instantiates a proxybonanza.com API client with the given key using golang's default http client.
 func NewApiClient(key string) *APIClient {
 	return &APIClient{
 		Key:           key,
@@ -43,71 +18,16 @@ func NewApiClient(key string) *APIClient {
 	}
 }
 
-func (api *APIClient) newRequest(method, u string) (r *http.Request) {
-	r, _ = http.NewRequest(method, u, nil)
-	r.Header.Add("accept", "application/json")
-	r.Header.Add("Authorization", api.Key)
-
-	return
+// NewCustomClient insantiates a proxybonanza API client with the given key and the given http.Client.
+func NewCustomClient(key string, client *http.Client) *APIClient {
+	return &APIClient{
+		Key:           key,
+		KnownPackages: make(map[int]PackageDetails),
+		c:             client,
+	}
 }
 
-func (api *APIClient) getReq(endpoint string) ([]byte, error) {
-	res, err := api.c.Do(api.newRequest("GET", APIBaseURL+endpoint))
-	body, err := processBody(res)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
 
-func (api *APIClient) postReq(endpoint string, post map[string]string) ([]byte, error) {
-	params := url.Values{}
-	for k, v := range post {
-		params.Set(k, v)
-	}
-	enc := params.Encode()
-	req, err := http.NewRequest("POST", APIBaseURL+endpoint, strings.NewReader(enc))
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", api.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	res, err := api.c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := processBody(res)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
-
-func (api *APIClient) deleteReq(endpoint string) ([]byte, error) {
-	req, err := http.NewRequest("DELETE", APIBaseURL+endpoint, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", api.Key)
-
-	res, err := api.c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := processBody(res)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
 
 // GetProxyPackages gets current proxy packages from your account.
 func (api *APIClient) GetProxyPackages() ([]UserPackage, error) {
@@ -235,7 +155,7 @@ func (api *APIClient) AddCurrentIPtoAllPackages() (success int) {
 		return
 	}
 
-	myip := GetMyIP()
+	myip := getMyIP()
 	for _, p := range packs {
 		_, err := api.AddAuthIP(myip, p.ID)
 		if err == nil {
