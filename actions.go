@@ -1,6 +1,8 @@
 package proxygonanza
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,8 +11,15 @@ import (
 	"strconv"
 )
 
-// NewApiClient instantiates a proxybonanza.com API client with the given key using golang's default http client.
-func NewApiClient(key string) *APIClient {
+
+func (api *APIClient) debugPrintf(format string, obj ...interface{}) {
+	if api.Debug {
+		fmt.Println(fmt.Sprintf(format, obj...))
+	}
+}
+
+// NewAPIClient instantiates a proxybonanza.com API client with the given key using golang's default http client.
+func NewAPIClient(key string) *APIClient {
 	return &APIClient{
 		Key:           key,
 		KnownPackages: make(map[int]PackageDetails),
@@ -27,7 +36,43 @@ func NewCustomClient(key string, client *http.Client) *APIClient {
 	}
 }
 
+// GetAllSOCKSIPsAndPorts will return a slice of IP:Port formatted proxy strings
+func (api *APIClient) GetAllSOCKSIPsAndPorts() ([]string, error) {
+	packs, err := api.GetProxyPackages()
+	if err != nil {
+		return []string{}, err
+	}
 
+	var results []string
+	for _, pack := range packs {
+		packsocks, err := api.GetPackageSOCKS(pack.ID)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, packsocks...)
+	}
+	return results, nil
+}
+
+// fun fact, this wasn't in their api docs.
+// proxybonanza.com/api/v1/userpackages_ippacks.csv?_delimiter=%3A&userpackage_id=xxxxx&_csvNoHeader=0&_csvFields=ip%2Cport_socks
+
+// GetPackageSOCKS returns a specified packages SOCKS5 proxies in host:port format.
+func (api *APIClient) GetPackageSOCKS(packageid int) ([]string, error) {
+	body, err := api.getReq("userpackages_ippacks.csv?_delimiter=%3A&userpackage_id=" + strconv.Itoa(packageid) + "&_csvNoHeader=0&_csvFields=ip%2Cport_socks")
+	if err != nil {
+		return []string{}, err
+	}
+	var results []string
+	scanner := bufio.NewScanner(bytes.NewReader(body))
+	for i := 0; scanner.Scan(); i++ {
+		if i == 0 {
+			continue
+		}
+		results = append(results, scanner.Text())
+	}
+	return results, nil
+}
 
 // GetProxyPackages gets current proxy packages from your account.
 func (api *APIClient) GetProxyPackages() ([]UserPackage, error) {

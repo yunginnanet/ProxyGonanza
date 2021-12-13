@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"git.tcp.direct/kayos/proxygonanza"
+	"git.tcp.direct/kayos/proxygonanza/example"
 )
+
+func init() {
+	example.ParseArgs()
+}
 
 func main() {
 	println("clearing all auth IPs...")
 
-	c := proxygonanza.NewApiClient(os.Args[1])
+	c := proxygonanza.NewAPIClient(example.APIKey)
 	deleted, err := c.DeleteAllAuthIPs()
 	if err != nil {
 		println(err.Error())

@@ -11,8 +11,12 @@ import (
 
 func (api *APIClient) newRequest(method, u string) (r *http.Request) {
 	r, _ = http.NewRequest(method, u, nil)
-	r.Header.Add("accept", "application/json")
+	if !strings.Contains(u, ".csv") {
+		r.Header.Add("accept", "application/json")
+	}
 	r.Header.Add("Authorization", api.Key)
+
+	api.debugPrintf("[%s] %s (Headers: %v)", method, u, r.Header)
 
 	return
 }

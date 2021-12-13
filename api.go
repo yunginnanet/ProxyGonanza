@@ -23,10 +23,9 @@ type Package struct {
 type APIClient struct {
 	Key           string
 	KnownPackages map[int]PackageDetails
-
-	c *http.Client
+	Debug         bool
+	c             *http.Client
 }
-
 
 // PackageResponse represents an API response from proxybonanza.com containing proxy package information.
 type PackageResponse struct {

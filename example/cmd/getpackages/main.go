@@ -3,13 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"git.tcp.direct/kayos/proxygonanza"
+	"git.tcp.direct/kayos/proxygonanza/example"
 )
 
+func init() {
+	example.ParseArgs()
+}
+
 func main() {
-	c := proxygonanza.NewApiClient(os.Args[1])
+	c := proxygonanza.NewAPIClient(example.APIKey)
 	println("getting proxy packages...")
 
 	packs, err := c.GetProxyPackages()
