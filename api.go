@@ -91,7 +91,7 @@ type UserPackage struct {
 	LowBanwidthNotificationPercent int            `json:"low_banwidth_notification_percent"`
 	Package                        PackageDetails `json:"package"`
 	BandwidthGb                    float64        `json:"bandwidth_gb"`
-	AdditionalBandwidthGb          int            `json:"additional_bandwidth_gb"`
+	AdditionalBandwidthGb          float64        `json:"additional_bandwidth_gb"`
 	BandwidthPercentLeftHuman      string         `json:"bandwidth_percent_left_human"`
 	ExpirationDateHuman            string         `json:"expiration_date_human"`
 	Name                           string         `json:"name"`
