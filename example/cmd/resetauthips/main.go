@@ -24,7 +24,6 @@ func main() {
 
 	println("deleted " + strconv.Itoa(deleted) + " IPs successfully")
 
-
 	println("adding current IP to all packages...")
 	count := c.AddCurrentIPtoAllPackages()
 	if count == 0 {

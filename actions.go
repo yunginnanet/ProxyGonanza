@@ -11,7 +11,6 @@ import (
 	"strconv"
 )
 
-
 func (api *APIClient) debugPrintf(format string, obj ...interface{}) {
 	if api.Debug {
 		fmt.Println(fmt.Sprintf(format, obj...))

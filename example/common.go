@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	Debug = false
+	Debug  = false
 	APIKey string
 )
 

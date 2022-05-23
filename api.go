@@ -81,13 +81,17 @@ type pagination struct {
 
 // UserPackage represents a proxy package purchased from proxybonanza.com.
 type UserPackage struct {
-	ID                             int            `json:"id"`
-	CustomName                     interface{}    `json:"custom_name"`
-	Login                          string         `json:"login"`
-	Password                       string         `json:"password"`
-	Expires                        time.Time      `json:"expires"`
-	Bandwidth                      int64          `json:"bandwidth"`
-	LastIPChange                   time.Time      `json:"last_ip_change"`
+	ID         int         `json:"id"`
+	CustomName interface{} `json:"custom_name"`
+	Login      string      `json:"login"`
+	Password   string      `json:"password"`
+	Expires    time.Time   `json:"expires"`
+	Bandwidth  int64       `json:"bandwidth"`
+
+	// FIXME:
+	// See https://github.com/yunginnanet/ProxyGonanza/issues/1
+	// LastIPChange                   time.Time      `json:"last_ip_change"`
+
 	LowBanwidthNotificationPercent int            `json:"low_banwidth_notification_percent"`
 	Package                        PackageDetails `json:"package"`
 	BandwidthGb                    float64        `json:"bandwidth_gb"`

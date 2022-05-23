@@ -37,6 +37,6 @@ func main() {
 	fmt.Printf("\nfound %d auth IPs\n", len(authips))
 	for _, i := range authips {
 		pretty, _ := json.MarshalIndent(i, "", "\t")
-		fmt.Print(string(pretty)+"\n")
+		fmt.Print(string(pretty) + "\n")
 	}
 }
