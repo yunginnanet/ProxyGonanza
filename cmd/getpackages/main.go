@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"git.tcp.direct/kayos/proxygonanza"
-	"git.tcp.direct/kayos/proxygonanza/example"
+	"git.tcp.direct/kayos/proxygonanza/internal"
 )
 
 func init() {
-	example.ParseArgs()
+	internal.ParseArgs()
 }
 
 func main() {
-	c := proxygonanza.NewAPIClient(example.APIKey)
+	c := proxygonanza.NewAPIClient(internal.APIKey)
 	println("getting proxy packages...")
 
 	packs, err := c.GetProxyPackages()

@@ -88,7 +88,7 @@ type UserPackage struct {
 	Expires    time.Time   `json:"expires"`
 	Bandwidth  int64       `json:"bandwidth"`
 
-	// FIXME:
+	// TODO:
 	// See https://github.com/yunginnanet/ProxyGonanza/issues/1
 	// LastIPChange                   time.Time      `json:"last_ip_change"`
 
