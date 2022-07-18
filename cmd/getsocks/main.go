@@ -1,19 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"git.tcp.direct/kayos/proxygonanza"
-	"git.tcp.direct/kayos/proxygonanza/example"
+	"git.tcp.direct/kayos/proxygonanza/internal"
 )
 
 func init() {
-	example.ParseArgs()
+	internal.ParseArgs()
 }
 
 func main() {
-	c := proxygonanza.NewAPIClient(example.APIKey)
-	if example.Debug {
+	c := proxygonanza.NewAPIClient(internal.APIKey)
+	if internal.Debug {
 		c.Debug = true
 		println("debug enabled")
 	}
@@ -23,6 +24,6 @@ func main() {
 		os.Exit(1)
 	}
 	for _, line := range socks {
-		println(line)
+		fmt.Fprint(os.Stdout, line+"\n")
 	}
 }

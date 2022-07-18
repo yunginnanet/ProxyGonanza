@@ -102,14 +102,15 @@ func (api *APIClient) GetProxyPackages() ([]UserPackage, error) {
 func (api *APIClient) GetAuthIPs() ([]AuthIP, error) {
 	body, err := api.getReq(authips)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get auth IPs: %w", err)
 	}
 
 	var auths AuthIPResponse
 
 	err = json.Unmarshal(body, &auths)
 	if err != nil {
-		return nil, err
+		print(string(body))
+		return nil, fmt.Errorf("failed to unmarshal auth ips: %w", err)
 	}
 
 	if !auths.Success {
@@ -140,6 +141,36 @@ func (api *APIClient) DeleteAllAuthIPs() (int, error) {
 		err = errors.New("failed to delete some IPs")
 	}
 	return done, err
+}
+
+// DeleteOtherAuthIPs deletes all authenticaiton IPs from your account's packages that do not match your current IP address.
+// Returns a slice of authentication IP IDs that were deleted and any errors that occurred.
+func (api *APIClient) DeleteOtherAuthIPs() ([]int, error) {
+	myip, err := getMyIP()
+	if err != nil {
+		return []int{}, fmt.Errorf("failed to get my IP: %w", err)
+	}
+	aips, err := api.GetAuthIPs()
+	if err != nil {
+		return []int{}, fmt.Errorf("failed to get auth IPs: %w", err)
+	}
+	todo := len(aips)
+	done := 0
+	var deleted []int
+	for _, aip := range aips {
+		if net.ParseIP(aip.IP).Equal(myip) {
+			todo--
+			continue
+		}
+		if api.DeleteAuthIPByID(int(aip.ID.(float64))) {
+			done++
+			deleted = append(deleted, int(aip.ID.(float64)))
+		}
+	}
+	if done < todo {
+		err = errors.New("failed to delete some IPs")
+	}
+	return deleted, err
 }
 
 // AddAuthIP adds a new IP to the corresponding/provided proxy package ID.
@@ -178,7 +209,11 @@ func (api *APIClient) DeleteAuthIPByIP(ipa net.IP) (err error) {
 	if ipa.IsPrivate() || ipa.IsUnspecified() || ipa.IsLoopback() {
 		return errors.New("IP is invalid")
 	}
-	aips, err := api.GetAuthIPs()
+	var aips []AuthIP
+	aips, err = api.GetAuthIPs()
+	if err != nil {
+		return
+	}
 	for _, aip := range aips {
 		if net.ParseIP(aip.IP).Equal(ipa) {
 			target := int(aip.ID.(float64))
@@ -192,16 +227,38 @@ func (api *APIClient) DeleteAuthIPByIP(ipa net.IP) (err error) {
 
 // AddCurrentIPtoAllPackages adds your current WAN IP to all packages on your account.
 // It returns the amount of successful packages that it was applied to.
+// It will skip packages that are already using the current IP.
 func (api *APIClient) AddCurrentIPtoAllPackages() (success int) {
-	packs, err := api.GetProxyPackages()
-	if err != nil {
-		fmt.Println(err)
+	myip, myIPErr := getMyIP()
+	if myIPErr != nil {
+		// TODO: probably don't handle any of these errors like this - avoiding breaking changes for now.
+		println("ProxyGonanza failed to retrieve own IP: " + myIPErr.Error())
 		return
 	}
-
-	myip := getMyIP()
-	for _, p := range packs {
-		_, err := api.AddAuthIP(myip, p.ID)
+	aips, aipErr := api.GetAuthIPs()
+	if aipErr != nil {
+		println("ProxyGonanza failed to get auth IPs: " + aipErr.Error())
+		return
+	}
+	packs, packErr := api.GetProxyPackages()
+	if packErr != nil {
+		println("ProxyGonanza failed to get proxy packages: " + packErr.Error())
+		return 0
+	}
+	var skips []int
+	for _, aip := range aips {
+		aipIP := net.ParseIP(aip.IP)
+		if aipIP.Equal(myip) {
+			skips = append(skips, aip.UserpackageID)
+		}
+	}
+	for _, pack := range packs {
+		for _, skip := range skips {
+			if pack.ID == skip {
+				continue
+			}
+		}
+		_, err := api.AddAuthIP(myip, pack.ID)
 		if err == nil {
 			success++
 		}

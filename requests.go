@@ -1,12 +1,14 @@
 package proxygonanza
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
+
+	"git.tcp.direct/kayos/proxygonanza/internal"
 )
 
 func (api *APIClient) newRequest(method, u string) (r *http.Request) {
@@ -37,11 +39,11 @@ func (api *APIClient) postReq(endpoint string, post map[string]string) ([]byte, 
 	}
 	enc := params.Encode()
 	req, err := http.NewRequest("POST", APIBaseURL+endpoint, strings.NewReader(enc))
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", api.Key)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("Authorization", api.Key)
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -80,8 +82,7 @@ func (api *APIClient) deleteReq(endpoint string) ([]byte, error) {
 }
 
 func processBody(res *http.Response) ([]byte, error) {
-	defer res.Body.Close()
-
+	defer internal.CloseBody(res)
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
@@ -89,16 +90,23 @@ func processBody(res *http.Response) ([]byte, error) {
 	return body, nil
 }
 
-func getMyIP() net.IP {
-	res, err := http.DefaultClient.Get("https://wtfismyip.com/text")
-	if err != nil {
-		fmt.Println(err)
-		return net.IP{}
+func getMyIP() (final net.IP, err error) {
+	endpoint := "https://wtfismyip.com/text"
+	envopt := os.Getenv("PROXYBONANZA_GETIP")
+	if envopt != "" {
+		endpoint = envopt
 	}
-	body, err := ioutil.ReadAll(res.Body)
+	var res *http.Response
+	res, err = http.DefaultClient.Get(endpoint)
+	defer internal.CloseBody(res)
 	if err != nil {
-		fmt.Println(err)
-		return net.IP{}
+		return
 	}
-	return net.ParseIP(strings.TrimSpace(string(body)))
+	var body []byte
+	body, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+	final = net.ParseIP(strings.TrimSpace(string(body)))
+	return
 }
