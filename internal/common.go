@@ -35,6 +35,9 @@ func ParseArgs() {
 
 // CloseBody is crude error handling for any potential errors closing the response body.
 func CloseBody(res *http.Response) {
+	if res.Body == nil || res == nil {
+		return
+	}
 	err := res.Body.Close()
 	if err != nil {
 		println("WARN: ProxyGonanza failed to close body for request to ",

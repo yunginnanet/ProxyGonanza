@@ -98,10 +98,10 @@ func getMyIP() (final net.IP, err error) {
 	}
 	var res *http.Response
 	res, err = http.DefaultClient.Get(endpoint)
-	defer internal.CloseBody(res)
 	if err != nil {
 		return
 	}
+	defer internal.CloseBody(res)
 	var body []byte
 	body, err = ioutil.ReadAll(res.Body)
 	if err != nil {
