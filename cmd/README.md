@@ -1,1 +1,1 @@
-##### This folder is intended to be used as contains example implementations of the parent library.
+##### This folder contains example implementations of ProxyGonanza.
